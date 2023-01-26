@@ -1,4 +1,4 @@
-interface Item{
+export interface Item{
     id: number;
     market_group_id: number;
     name: string;

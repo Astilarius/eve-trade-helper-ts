@@ -1,11 +1,11 @@
-interface System{
-    id: Number;
-    name: String;
+export interface System{
+    id: number;
+    name: string;
     sec: number;
     region_id: number;
 }
 
-const systems = [
+const systems:System[] = [
 {id:30000001,name:'Tanoo',sec:0.858324,region_id:10000001},
 {id:30000005,name:'Sasta',sec:0.814337,region_id:10000001},
 {id:30000007,name:'Yuzier',sec:0.906556,region_id:10000001},
@@ -1320,6 +1320,6 @@ const systems = [
 {id:30045348,name:'Notoras',sec:0.188791,region_id:10000069},
 {id:30045349,name:'Rakapas',sec:0.222780,region_id:10000069},
 {id:30045352,name:'Nisuwa',sec:0.309433,region_id:10000069},
-{id:30005327,name:'Chesiette',security_status: 0.572704,region_id:10000068},
+{id:30005327,name:'Chesiette',sec: 0.572704,region_id:10000068},
 ]
 export default systems

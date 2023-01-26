@@ -1,6 +1,15 @@
 import React, { ChangeEvent, useState } from 'react'
+export interface UserData{
+    volume:number,
+    capital:number,
+    tax:number,
+    highsec:boolean,
+}
+export interface UserDataProps{
+    onSubmit:Function,
+}
 
-function UserDataForm() {
+function UserDataForm(props:UserDataProps) {
     const [volume, setVolume] = useState(0)
     const [capital, setCapital] = useState(0)
     const [tax, setTax] = useState(0)
@@ -11,25 +20,25 @@ function UserDataForm() {
     const onTaxChange = (e:ChangeEvent<HTMLInputElement>) => {setTax(Number(e.target.value))}
     const onHighsecChange = () => {setHighsec(currentValue => !currentValue)}
 
-    const onSubmit = () => {
+    const onSubmitClick = () => {
         if (volume && capital && tax){
-                    
+            props.onSubmit(volume, capital, tax, highsec)
         }
     }
 
     return (
     <div>
-        <form>
-            <label htmlFor='setVolume'>Set Volume</label>
-            <input value={volume} onChange={onVolumeChange} type='number' name='setVolume' id='setVolume'/>
-            <label htmlFor='setCapital'>Set Capital</label>
-            <input value={capital} onChange={onCapitalChange} type='number' name='setCapital' id='setCapital'/>
-            <label htmlFor='setTax'>Set Tax</label>
-            <input value={tax} onChange={onTaxChange} type='number' name='setTax' id='setTax'/>
-            <label htmlFor='setHighsec'>Is Highsec</label>
-            <input onChange={onHighsecChange} type='checkbox' name='setHighsec' id='setHighsec'/>
-            <button onClick={onSubmit} >submit</button>
-        </form>
+        {/* <form> */}
+            <label htmlFor='setVolume'>Set Volume</label><br/>
+            <input value={volume} onChange={onVolumeChange} type='number' name='setVolume' id='setVolume'/><br/>
+            <label htmlFor='setCapital'>Set Capital</label><br/>
+            <input value={capital} onChange={onCapitalChange} type='number' name='setCapital' id='setCapital'/><br/>
+            <label htmlFor='setTax'>Set Tax</label><br/>
+            <input value={tax} step={0.01} onChange={onTaxChange} type='number' name='setTax' id='setTax'/><br/>
+            <label htmlFor='setHighsec'>Is Highsec</label><br/>
+            <input onChange={onHighsecChange} type='checkbox' name='setHighsec' id='setHighsec'/><br/>
+            <button onClick={onSubmitClick} >submit</button>
+        {/* </form> */}
     </div>
   )
 }
