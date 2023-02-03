@@ -10,9 +10,9 @@ export interface UserDataProps{
 }
 
 function UserDataForm(props:UserDataProps) {
-    const [volume, setVolume] = useState(0)
-    const [capital, setCapital] = useState(0)
-    const [tax, setTax] = useState(0)
+    const [volume, setVolume] = useState(50000)
+    const [capital, setCapital] = useState(1000000000)
+    const [tax, setTax] = useState(0.05)
     const [highsec, setHighsec] = useState(false)
 
     const onVolumeChange = (e:ChangeEvent<HTMLInputElement>) => {setVolume(Number(e.target.value))}
