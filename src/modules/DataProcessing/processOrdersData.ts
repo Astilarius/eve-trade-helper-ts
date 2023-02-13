@@ -3,16 +3,18 @@ import items, {Item} from '../../data/items'
 import systems, {System} from "../../data/systems"
 import type { UserData } from '../UserDataForm/UserDataForm'
 import fetchRoute from "./fetchRoute"
+import fetchStationName from "./fetchStation"
 
 
 export interface BuySellOrders{
     buy:Order[],
     sell:Order[],
 }
-interface Profit extends Order{
+export interface Profit extends Order{
     profit:number,
     totalProfit:number,
     profitableAmount:number,
+    itemName:string,
 }
 interface MainMarket{
     orders:{
@@ -40,10 +42,12 @@ export interface SystemOrdersData{
         cart:Array<Profit>,
         buyCart:Array<Profit>,
         sellCart:Array<Profit>,
+        locationCart:Array<LocationCart>,
         order_vol:number,
         order_price:number,
         jumps:number,
-        prof_per_jump:number}
+        prof_per_jump:number,
+        security:number,}
 }
 export interface SystemOrderData{
     items:{[key:string]:ItemOrderData},
@@ -53,13 +57,23 @@ export interface SystemOrderData{
     cart:Array<Profit>,
     buyCart:Array<Profit>,
     sellCart:Array<Profit>,
+    locationCart:Array<LocationCart>,
     order_vol:number,
     order_price:number,
     jumps:number,
-    prof_per_jump:number
+    prof_per_jump:number,
+    security:number,
+}
+interface LocationCart{
+    name:string,
+    id:number,
+    buyCart:Array<Profit>,
+    sellCart:Array<Profit>,
 }
 
 async function processOrdersData(downloadedOrders:Order[], userData:UserData){
+    var promises:Promise<any>[] =[] 
+    var jumpPromises:Promise<any>[] =[] 
     console.log(userData)
     console.log(downloadedOrders)
     const allowedItems = items.filter(item => item.volume < userData.volume)
@@ -94,20 +108,12 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
     var jitaOrders:Array<BuySellOrders>=[];
     for(var orderSystem in tempOrders){
         if(Number(orderSystem)===30000142){
-            // jitaOrders=tempOrders[orderSystem]['items']
-            // for (var item in tempOrders[orderSystem]){
-            //     jitaOrders[Number(item)].buy = tempOrders[orderSystem]['items'][Number(item)].filter((order: { is_buy_order: any })=>order.is_buy_order)
-            //     jitaOrders[Number(item)].sell = tempOrders[orderSystem]['items'][Number(item)].filter((order: { is_buy_order: any })=>!order.is_buy_order)
-            // }
-            // jitaOrders = tempOrders[orderSystem];
-
             for (var item in tempOrders[orderSystem]){
                 jitaOrders[Number(item)] = {
                     buy:tempOrders[orderSystem][Number(item)].filter((o: { is_buy_order: boolean }) => o.is_buy_order),
                     sell:tempOrders[orderSystem][Number(item)].filter((o: { is_buy_order: boolean }) => !o.is_buy_order),
                 }
             }
-            // tempOrders.splice(orderSystem, 1);
             delete tempOrders[orderSystem];
 
             continue;
@@ -125,11 +131,19 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
             'cart':[],
             'buyCart':[],
             'sellCart':[],
+            'locationCart':[],
             'order_vol':0,
             'order_price':0,
-            'jumps': await fetchRoute(Number(orderSystem),userData.highsec).then(res=>res.length),
+            'jumps': 0,
             'prof_per_jump':0,
+            'security':system.sec,
         };
+        const thisItem = tempOrders[orderSystem]
+        const jumpsAmount = fetchRoute(Number(orderSystem),userData.highsec).then(res=>{
+            thisItem['jumps']=res.length
+            console.log(tempOrders[orderSystem]['jumps'])
+        })
+        jumpPromises.push(jumpsAmount)
         for (var item in tempOrders[orderSystem]['items']){
             const orderItem:Item = allowedItems.find(tempItem=>tempItem.id===Number(item))!
             tempOrders[orderSystem]['items'][Number(item)] = {//adding properties to each item in system
@@ -139,6 +153,7 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
                         profit:0,
                         totalProfit:0,
                         profitableAmount:0,
+                        itemName: orderItem.name,
                     }
                 }),
                 'id': Number(item),
@@ -150,6 +165,12 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
         }
     }
     console.log(tempOrders)
+
+    console.log(jumpPromises)
+    await Promise.all(jumpPromises)
+    
+    console.log(tempOrders)
+
     var groupedOrders:SystemOrdersData = tempOrders;
     console.log(groupedOrders)
     for(var item in jitaOrders){
@@ -160,6 +181,8 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
             return a.price - b.price
         })
     }
+
+
     console.log(jitaOrders)
     for(var system in groupedOrders){
         var currentSystem = groupedOrders[system]
@@ -209,29 +232,66 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
             }
             var bestProfitItem = Object.values(currentSystem.items).reduce((prev, current) => (+prev.vol_profit > +current.vol_profit) ? prev : current)
             var bestProfitOrder = bestProfitItem.orders[0]
+            if (bestProfitItem.orders.length < 1){
+                delete currentSystem.items[bestProfitItem.id]
+                continue
+            }
             if(bestProfitOrder.profit < 1){
                 delete groupedOrders[currentSystem.id].items[bestProfitItem.id]
                 continue
             }
             var currentLimit = bestProfitOrder.is_buy_order ? buyLimit : sellLimit
             bestProfitOrder.profitableAmount = bestProfitOrder.profitableAmount*bestProfitItem.volume>currentLimit.volume?
-                currentLimit.volume/bestProfitItem.volume : bestProfitOrder.profitableAmount
+                Math.floor(currentLimit.volume/bestProfitItem.volume) : bestProfitOrder.profitableAmount
             bestProfitOrder.profitableAmount = bestProfitOrder.profitableAmount*bestProfitOrder.price>currentLimit.capital?
-                currentLimit.capital/bestProfitOrder.price : bestProfitOrder.profitableAmount
-            // if(bestProfitOrder.profitableAmount===0){
-            //     console.log()
-            // }
+                Math.floor(currentLimit.capital/bestProfitOrder.price) : bestProfitOrder.profitableAmount
+            if(bestProfitOrder.profitableAmount < 1){
+                bestProfitItem.orders.splice(0,1)
+                continue
+            }
             currentSystem.profit += bestProfitItem.profit*bestProfitOrder.profitableAmount
             if(bestProfitOrder.is_buy_order){
                 buyLimit.capital -= bestProfitOrder.price*bestProfitOrder.profitableAmount
                 buyLimit.volume -= bestProfitItem.volume*bestProfitOrder.profitableAmount
                 currentLimit = buyLimit
                 currentSystem.buyCart.push(bestProfitOrder)
+                const location = currentSystem.locationCart.find(location => location.id===bestProfitOrder.location_id)
+                if (instanceOfLocationCart(location)){
+                    location.buyCart.push(bestProfitOrder)
+                } else if (!instanceOfLocationCart(location)){
+                    const newLocation:LocationCart = {
+                        name: '',
+                        id:bestProfitOrder.location_id,
+                        buyCart:[],
+                        sellCart:[],
+                    }
+                    if (bestProfitOrder.location_id > 1000000000000){
+                        newLocation.name = `capsuleer structure in ${currentSystem.name}`
+                    } else {
+                        const station = fetchStationName(bestProfitOrder).catch((err)=>{return {name:'error while downloading'}}).then(station => newLocation.name=station.name)
+                        promises.push(station)
+                    }
+                    currentSystem.locationCart.push(newLocation)
+                    newLocation.buyCart.push(bestProfitOrder)
+                }
             } else {
                 sellLimit.capital -= bestProfitOrder.price*bestProfitOrder.profitableAmount
                 sellLimit.volume -= bestProfitItem.volume*bestProfitOrder.profitableAmount
                 currentLimit = sellLimit
                 currentSystem.sellCart.push(bestProfitOrder)
+                const location = currentSystem.locationCart.find(location => location.id===bestProfitOrder.location_id)
+                if (instanceOfLocationCart(location)){
+                    location.sellCart.push(bestProfitOrder)
+                } else if (!instanceOfLocationCart(location)){
+                    const newLocation:LocationCart = {
+                        name: bestProfitOrder.location_id > 1000000000000 ? `capsuleer structure in ${currentSystem.name}` : await fetchStationName(bestProfitOrder).then(station => station.name),
+                        id:bestProfitOrder.location_id,
+                        buyCart:[],
+                        sellCart:[],
+                    }
+                    currentSystem.locationCart.push(newLocation)
+                    newLocation.sellCart.push(bestProfitOrder)
+                }
             }
             currentSystem.cart.push(bestProfitOrder)
             bestProfitItem.orders.splice(0,1)
@@ -249,13 +309,13 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
             const orderItem = items.find(item => item.id===order.type_id)!
 
             currentSystem.order_vol += orderItem.volume*order.profitableAmount
-            currentSystem.order_price += order.profit*order.profitableAmount
+            currentSystem.order_price += order.price*order.profitableAmount
         })
         currentSystem.sellCart.forEach(order=>{
             const orderItem = items.find(item => item.id===order.type_id)!
 
             currentSystem.order_vol += orderItem.volume*order.profitableAmount
-            currentSystem.order_price += order.profit*order.profitableAmount
+            currentSystem.order_price += order.price*order.profitableAmount
         })
         currentSystem.prof_per_jump=currentSystem.profit/currentSystem.jumps/2
     }
@@ -266,14 +326,19 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
         functionResult.push(groupedOrders[system])
     }
     functionResult.sort((a, b)=>b.prof_per_jump-a.prof_per_jump)
-    functionResult = functionResult.slice(0,100)
+    functionResult = functionResult.slice(0,10)
     console.log(functionResult)
+    console.log(promises)
+    await Promise.all(promises)
     console.log('done')
     return functionResult
 }
 
 function notEmpty<Profit>(value: Profit | null | undefined): value is Profit {
     return value !== null && value !== undefined;
+}
+function instanceOfLocationCart(object: any): object is LocationCart {
+    return object;
 }
 
 export default processOrdersData

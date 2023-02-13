@@ -1321,5 +1321,7 @@ const systems:System[] = [
 {id:30045349,name:'Rakapas',sec:0.222780,region_id:10000069},
 {id:30045352,name:'Nisuwa',sec:0.309433,region_id:10000069},
 {id:30005327,name:'Chesiette',sec: 0.572704,region_id:10000068},
+{id:30004270,name:'Sazilid',sec:0.53197,region_id:10000054},
+{id:30002530,name:'Avesber',sec:0.75318,region_id:10000030},
 ]
 export default systems
