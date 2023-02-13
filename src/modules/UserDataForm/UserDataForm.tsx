@@ -7,6 +7,7 @@ export interface UserData{
 }
 export interface UserDataProps{
     onSubmit:Function,
+    msg:string,
 }
 
 function UserDataForm(props:UserDataProps) {
@@ -38,6 +39,7 @@ function UserDataForm(props:UserDataProps) {
             <label htmlFor='setHighsec'>Is Highsec</label><br/>
             <input onChange={onHighsecChange} type='checkbox' name='setHighsec' id='setHighsec'/><br/>
             <button onClick={onSubmitClick} >submit</button>
+            <p>{props.msg}</p>
         {/* </form> */}
     </div>
   )

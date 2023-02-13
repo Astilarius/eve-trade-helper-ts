@@ -141,7 +141,6 @@ async function processOrdersData(downloadedOrders:Order[], userData:UserData){
         const thisItem = tempOrders[orderSystem]
         const jumpsAmount = fetchRoute(Number(orderSystem),userData.highsec).then(res=>{
             thisItem['jumps']=res.length
-            console.log(tempOrders[orderSystem]['jumps'])
         })
         jumpPromises.push(jumpsAmount)
         for (var item in tempOrders[orderSystem]['items']){

@@ -10,6 +10,7 @@ import processOrdersData, { SystemOrdersData, SystemOrderData } from './modules/
 import './App.css'
 
 function App() {
+  const [msg, setMsg] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const firstSys:SystemOrderData[] = []
   const [systemOrderData, setSystemOrderData] = useState(firstSys)
@@ -34,6 +35,7 @@ function App() {
   }
   const userDataProps:UserDataProps={
     onSubmit:(volume:number, capital:number, tax:number, highsec:boolean) => {
+      setMsg('Downloading orders')
       console.log(`button pressed`)
       const gouse:Array<string> = [
         "░░░░░░░░░░░░░░░░░░░░░░░░░░",
@@ -61,13 +63,20 @@ function App() {
       //     })
       loadAllOrdersData()
         .then(r => {
+          setMsg('Processing orders')
           console.log(r)
           processOrdersData(r, {volume:volume, capital:capital, tax:tax, highsec:highsec})
             .then(systems=>{
+              if(systems.length===0){
+                setMsg('No results for your input')
+              } else {
+                setMsg('')
+              }
               setSystemOrderData(systems)
             })
         })
-    }
+    },
+    msg:msg,
   }
 
   return (
