@@ -1,0 +1,67 @@
+.s10{
+    color: rgb(88, 206, 186);
+}
+.s9{
+    color: rgb(88, 206, 194);
+}
+.s8{
+    color: rgb(88, 206, 169);
+}
+.s7{
+    color: rgb(88, 206, 110);
+}
+.s6{
+    color: rgb(155,206,88);
+}
+.s5{
+    color: rgb(196, 206, 88);
+}
+.s4{
+    color: rgb(206, 180, 88);
+}
+.s3{
+    color: rgb(206, 155, 88);
+}
+.s2{
+    color: rgb(206, 143, 88);
+}
+.s1{
+    color: rgb(206, 98, 88);
+}
+.squares div{
+    display: inline-block;
+}
+.squares{
+    margin-left: 0px;
+}
+#green{
+    background-color: greenyellow;
+}
+.squares div{
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    margin: 3px;
+}
+@keyframes twinkle{
+    0%{
+        /* opacity: calc(-0.5); */
+    }
+    100%{
+        opacity: calc(+1);
+    }
+}
+.star{
+    will-change: contents;
+    animation-timing-function: linear;
+    animation-name: twinkle;
+    animation-duration: 4s;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+    width: 0.1px;
+    height: 0.1px;
+    border-radius: 100px;
+    position: absolute;
+    border-style: solid;
+    border-color: white;
+}

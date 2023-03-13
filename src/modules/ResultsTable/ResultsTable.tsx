@@ -31,7 +31,7 @@ const ResultsTable:React.FC<{systems:SystemOrderData[]}>=props=>{
         })
         return (
             <div key={system.id}>
-                <h1>{system.name} <span className={`s${(roundedSec*10).toString()}`}>{roundedSec}</span></h1>
+                <a className='systemName' href={`http://127.0.0.1:5173/routes?system=${system.name}&sec=${roundedSec}&profit=${system.profit}&profperjump=${system.prof_per_jump}&jumps=${system.jumps}`} target="_blank">{system.name} <span className={`s${(roundedSec*10).toString()}`}>{roundedSec}</span></a>
                 <p>profit: {Math.floor(system.profit)}</p>
                 <p>profit per jump: {Math.floor(system.prof_per_jump)}</p>
                 <p>jumps: {system.jumps}</p>

@@ -14,6 +14,27 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const firstSys:SystemOrderData[] = []
   const [systemOrderData, setSystemOrderData] = useState(firstSys)
+  const [stars, setStars] = useState(generateStars());
+  function generateStars(){
+    var stars = [];
+    var setleft = 0;
+    var settop = 0;
+    var setrotate = 0;
+    for(var i = 0; i < 150; i++){
+      setleft = Math.floor(Math.random() * 99);
+      settop = Math.floor(Math.random() * 99);
+      var star=<div className="star"
+      key={i}
+      style={
+        {left: (setleft)+'%',
+        top: (settop)+'%',
+        opacity: (Math.random() - 1),
+        animationDelay: (Math.random()*3)+'s' }}>
+      </div>
+      stars.push(star)
+    }
+    return stars;
+  }
 
   useEffect(()=>{
     const queryParams = new URLSearchParams(window.location.search);
@@ -81,9 +102,11 @@ function App() {
 
   return (
     <div className="App">
+      <h1>Eve Trade Helper</h1>
       <Login {...loginProps}/>
       <UserDataForm {...userDataProps}/>
       <ResultsTable {...resultsTableProps}/>
+      <div className="stars">{stars}</div>
     </div>
   )
 }
